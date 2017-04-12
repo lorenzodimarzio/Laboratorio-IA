@@ -1,7 +1,6 @@
 #include "ros/ros.h"
 #include "sensor_msgs/LaserScan.h"
 #include "tf/transform_listener.h"
-//#include "tf2/ExtrapolationException.h"
 
 tf::TransformListener* listener;
 
@@ -35,7 +34,7 @@ void callback(const sensor_msgs::LaserScan::ConstPtr& msg)
 				transform.getRotation().getAngle());
 				
 	} catch(tf2::ExtrapolationException ex) {
-		ROS_INFO("Exception!");
+		ROS_INFO("An extrapolation exception occured!");
 	}
 }
 
