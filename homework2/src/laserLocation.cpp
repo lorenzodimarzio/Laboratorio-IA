@@ -1,17 +1,41 @@
 #include "ros/ros.h"
-#include "tf2_msgs/TFMessage.h"
+#include "sensor_msgs/LaserScan.h"
+#include "tf/transform_listener.h"
+//#include "tf2/ExtrapolationException.h"
 
-void tfCallback(const tf2_msgs::TFMessage::ConstPtr& msg)
+tf::TransformListener* listener;
+
+void callback(const sensor_msgs::LaserScan::ConstPtr& msg)
 {	
-	for (int i=0; i<msg->transforms.size(); i++) {
-		if (msg->transforms[i].header.frame_id == "odom") {
-			ROS_INFO("LASER (%f,%f,%f)",
-				-(msg->transforms[i].transform.translation.x),
-				-(msg->transforms[i].transform.translation.y),
-				-(atan(msg->transforms[i].transform.rotation.w/msg->transforms[i].transform.rotation.z))
-			);
-			
+	try {
+		tf::StampedTransform transform;
+		
+		if (listener->waitForTransform(
+				"/odom",
+				"/base_laser_link",
+				ros::Time::now(),
+				ros::Duration(1))) {
+		} else {
+			ROS_INFO("Cannot transform");
 		}
+		
+		listener->lookupTransform(
+				"/odom",
+				ros::Time::now(),
+				"/base_laser_link",
+				ros::Time::now(),
+				"/base_laser_link",
+				transform);	
+		
+		ROS_INFO("LASER %d.%d (%lf, %lf, %lf)",
+				transform.stamp_.sec,
+				transform.stamp_.nsec,
+				transform.getOrigin().getX(),
+				transform.getOrigin().getY(),
+				transform.getRotation().getAngle());
+				
+	} catch(tf2::ExtrapolationException ex) {
+		ROS_INFO("Exception!");
 	}
 }
 
@@ -20,7 +44,9 @@ int main(int argc, char **argv)
 	ros::init(argc, argv, "laserLocation");
 	ros::NodeHandle n;
 	
-	ros::Subscriber sub = n.subscribe("tf", 1000, tfCallback);
+	listener = new tf::TransformListener();
+	
+	ros::Subscriber sub = n.subscribe("base_scan", 1000, callback);
 	
 	ros::spin();
 	
