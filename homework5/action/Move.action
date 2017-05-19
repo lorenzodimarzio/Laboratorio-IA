@@ -1,0 +1,8 @@
+#goal definition
+float64 desired_speed
+float64 distance
+---
+#result definition
+nav_msgs/Odometry odom_pose
+---
+#feedback definition
